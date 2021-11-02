@@ -29,8 +29,6 @@ namespace TrickyBookStore.Services.Payment
                 return 0;
             customerTransactions = customerTransactions.OrderByDescending(transaction => transaction.Book.Price).ToList();
             var subscriptions = existedCustomer.GetCustomerSubscriptionsPerTypeOrderByPriority();
-            if (subscriptions.Count == 0)
-                return UseFreePaymentCalculatorForOneMonth(customerTransactions);
             double fixedPrice = subscriptions.First().Value.FirstOrDefault().PriceDetails[this.FIXED_PRICE];
             switch (subscriptions.First().Key)
             {
@@ -40,10 +38,9 @@ namespace TrickyBookStore.Services.Payment
                     return UseCategoryAddictedCalculatorForOneMonth(customerTransactions,subscriptions.First().Value) + fixedPrice;
                 case (int)SubscriptionTypes.Paid:
                     return UsePaidPaymentCalculatorForOneMonth(customerTransactions) + fixedPrice;
-                case (int)SubscriptionTypes.Free:
+                default:
                     return UseFreePaymentCalculatorForOneMonth(customerTransactions);
             }
-            return 0;
         }
         private double UseCategoryAddictedCalculatorForOneMonth(IEnumerable<PurchaseTransaction> transactions, IEnumerable<Subscription> categoryAddictedSubscriptions)
         {
@@ -155,7 +152,7 @@ namespace TrickyBookStore.Services.Payment
             return payment.Round(2);
         }
         private double GetDiscountValue(double basePrice, double percentDiscount)
-        {
+        { 
             return (basePrice * percentDiscount) / 100;
         }
     }
