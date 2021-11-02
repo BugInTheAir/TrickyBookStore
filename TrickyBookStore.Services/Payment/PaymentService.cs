@@ -25,7 +25,7 @@ namespace TrickyBookStore.Services.Payment
         {
             var existedCustomer = _customerService.GetCustomerById(customerId);
             var customerTransactions = _purchaseTransactionService.GetPurchaseTransactions(customerId, atMonth, atYear);
-            if (customerTransactions is null || existedCustomer is null || customerTransactions.Count() == 0)
+            if (existedCustomer is null)
                 return 0;
             customerTransactions = customerTransactions.OrderByDescending(transaction => transaction.Book.Price).ToList();
             var subscriptions = existedCustomer.GetCustomerSubscriptionsPerTypeOrderByPriority();
