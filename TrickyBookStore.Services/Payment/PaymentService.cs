@@ -13,7 +13,7 @@ namespace TrickyBookStore.Services.Payment
     {
         private ICustomerService _customerService { get; }
         private IPurchaseTransactionService _purchaseTransactionService { get; }
-        
+        private string FIXED_PRICE = "FixPrice";
         public PaymentService(ICustomerService customerService,
             IPurchaseTransactionService purchaseTransactionService, IBookContext context) : base(context)
         {
@@ -31,14 +31,15 @@ namespace TrickyBookStore.Services.Payment
             var subscriptions = existedCustomer.GetCustomerSubscriptionsPerTypeOrderByPriority();
             if (subscriptions.Count == 0)
                 return UseFreePaymentCalculatorForOneMonth(customerTransactions);
+            double fixedPrice = subscriptions.First().Value.FirstOrDefault().PriceDetails[this.FIXED_PRICE];
             switch (subscriptions.First().Key)
             {
                 case (int)SubscriptionTypes.Premium:
-                    return UsePremiumPaymentCalculatorForOneMonth(customerTransactions);
+                    return UsePremiumPaymentCalculatorForOneMonth(customerTransactions) + fixedPrice;
                 case (int)SubscriptionTypes.CategoryAddicted:
-                    return UseCategoryAddictedCalculatorForOneMonth(customerTransactions,subscriptions.First().Value);
+                    return UseCategoryAddictedCalculatorForOneMonth(customerTransactions,subscriptions.First().Value) + fixedPrice;
                 case (int)SubscriptionTypes.Paid:
-                    return UsePaidPaymentCalculatorForOneMonth(customerTransactions);
+                    return UsePaidPaymentCalculatorForOneMonth(customerTransactions) + fixedPrice;
                 case (int)SubscriptionTypes.Free:
                     return UseFreePaymentCalculatorForOneMonth(customerTransactions);
             }
@@ -48,13 +49,13 @@ namespace TrickyBookStore.Services.Payment
         {
             double payment = 0;
             IList<PurchaseTransaction> fullPriceTransactions = transactions.Where(transaction => categoryAddictedSubscriptions.Where(subValue => subValue.BookCategoryId.Equals(transaction.Book.CategoryId)).FirstOrDefault() is null).ToList();
-            IList<PurchaseTransaction> discountableTransactions = transactions.Where(transaction => categoryAddictedSubscriptions.Where(subValue => subValue.BookCategoryId.Equals(transaction.Book.CategoryId)).FirstOrDefault() != null).OrderByDescending(transaction => transaction.Book.Price).ToList();
+            IList<PurchaseTransaction> discountAbleTransactions = transactions.Where(transaction => categoryAddictedSubscriptions.Where(subValue => subValue.BookCategoryId.Equals(transaction.Book.CategoryId)).FirstOrDefault() != null).ToList();
             foreach(var transaction in fullPriceTransactions)
             {
                 payment += transaction.Book.Price;
             }
             IDictionary<int, IList<PurchaseTransaction>> transactionPerCategory = new Dictionary<int, IList<PurchaseTransaction>>();
-            foreach(var transaction in discountableTransactions)
+            foreach(var transaction in discountAbleTransactions)
             {
                 if (transaction.Book.IsOld)
                     continue;
