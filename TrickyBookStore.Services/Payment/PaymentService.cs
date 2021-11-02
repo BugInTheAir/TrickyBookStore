@@ -33,16 +33,16 @@ namespace TrickyBookStore.Services.Payment
             switch (subscriptions.First().Key)
             {
                 case (int)SubscriptionTypes.Premium:
-                    return UsePremiumPaymentCalculatorForOneMonth(customerTransactions) + fixedPrice;
+                    return UsePremiumPaymentCalculator(customerTransactions) + fixedPrice;
                 case (int)SubscriptionTypes.CategoryAddicted:
-                    return UseCategoryAddictedCalculatorForOneMonth(customerTransactions,subscriptions.First().Value) + fixedPrice;
+                    return UseCategoryAddictedCalculator(customerTransactions,subscriptions.First().Value) + fixedPrice;
                 case (int)SubscriptionTypes.Paid:
-                    return UsePaidPaymentCalculatorForOneMonth(customerTransactions) + fixedPrice;
+                    return UsePaidPaymentCalculator(customerTransactions) + fixedPrice;
                 default:
-                    return UseFreePaymentCalculatorForOneMonth(customerTransactions);
+                    return UseFreePaymentCalculator(customerTransactions);
             }
         }
-        private double UseCategoryAddictedCalculatorForOneMonth(IEnumerable<PurchaseTransaction> transactions, IEnumerable<Subscription> categoryAddictedSubscriptions)
+        private double UseCategoryAddictedCalculator(IEnumerable<PurchaseTransaction> transactions, IEnumerable<Subscription> categoryAddictedSubscriptions)
         {
             double payment = 0;
             IList<PurchaseTransaction> fullPriceTransactions = transactions.Where(transaction => categoryAddictedSubscriptions.Where(subValue => subValue.BookCategoryId.Equals(transaction.Book.CategoryId)).FirstOrDefault() is null).ToList();
@@ -86,7 +86,7 @@ namespace TrickyBookStore.Services.Payment
             }
             return payment.Round(2);
         }
-        private double UsePremiumPaymentCalculatorForOneMonth(IEnumerable<PurchaseTransaction> transactions)
+        private double UsePremiumPaymentCalculator(IEnumerable<PurchaseTransaction> transactions)
         {
             double payment = 0;
             int freeBooksRemain = 3;
@@ -108,7 +108,7 @@ namespace TrickyBookStore.Services.Payment
             }
             return payment.Round(2);
         }
-        private double UsePaidPaymentCalculatorForOneMonth(IEnumerable<PurchaseTransaction> transactions)
+        private double UsePaidPaymentCalculator(IEnumerable<PurchaseTransaction> transactions)
         {
             double payment = 0;
             int discountForNewBooksRemain = 3;
@@ -134,7 +134,7 @@ namespace TrickyBookStore.Services.Payment
             }
             return payment.Round(2);
         }
-        private double UseFreePaymentCalculatorForOneMonth(IEnumerable<PurchaseTransaction> transactions)
+        private double UseFreePaymentCalculator(IEnumerable<PurchaseTransaction> transactions)
         {
             double payment = 0;
             foreach(var transaction in transactions)
