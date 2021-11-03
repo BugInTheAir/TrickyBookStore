@@ -9,7 +9,7 @@ namespace TrickyBookStore.Services.Utils
 {
     public static class CustomerExtensions
     {
-        public static IDictionary<int, IList<Subscription>>GetCustomerSubscriptionsPerTypeOrderByPriority(this Customer customer)
+        public static IDictionary<int, IList<Subscription>>GetCustomerSubscriptionsPerType(this Customer customer)
         {
             Dictionary<int, IList<Subscription>> subscriptionPerType = new Dictionary<int, IList<Subscription>>();
             foreach(var sub in customer.Subscriptions)
@@ -30,7 +30,7 @@ namespace TrickyBookStore.Services.Utils
                         break;
                 }
             }
-            return subscriptionPerType.OrderBy(sub => sub.Value.First().Priority).ToDictionary(sub => sub.Key, sub => sub.Value);
+            return subscriptionPerType;
         }
 
         private static void EnrichSubscriptionsDictionary(Dictionary<int, IList<Subscription>> subscriptionPerType, Subscription sub, int type)

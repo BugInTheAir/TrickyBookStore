@@ -1,4 +1,5 @@
-﻿ using System;
+﻿using MoreLinq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TrickyBookStore.Models;
@@ -28,14 +29,16 @@ namespace TrickyBookStore.Services.Payment
             if (existedCustomer is null)
                 return 0;
             customerTransactions = customerTransactions.OrderByDescending(transaction => transaction.Book.Price).ToList();
-            var subscriptions = existedCustomer.GetCustomerSubscriptionsPerTypeOrderByPriority();
-            double fixedPrice = subscriptions.First().Value.FirstOrDefault().PriceDetails[this.FIXED_PRICE];
-            switch (subscriptions.First().Key)
+            var subscriptions = existedCustomer.GetCustomerSubscriptionsPerType().MaxBy(subscription => subscription.Value.First().Priority).FirstOrDefault();
+            if (subscriptions.Value is null)
+                return UseFreePaymentCalculator(customerTransactions);
+            double fixedPrice = subscriptions.Value.FirstOrDefault().PriceDetails[this.FIXED_PRICE];
+            switch (subscriptions.Key)
             {
                 case (int)SubscriptionTypes.Premium:
                     return UsePremiumPaymentCalculator(customerTransactions) + fixedPrice;
                 case (int)SubscriptionTypes.CategoryAddicted:
-                    return UseCategoryAddictedCalculator(customerTransactions,subscriptions.First().Value) + fixedPrice;
+                    return UseCategoryAddictedCalculator(customerTransactions,subscriptions.Value) + fixedPrice;
                 case (int)SubscriptionTypes.Paid:
                     return UsePaidPaymentCalculator(customerTransactions) + fixedPrice;
                 default:
